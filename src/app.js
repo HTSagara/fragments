@@ -5,6 +5,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 
+// Passport.js
+const passport = require('passport');
+const authenticate = require('./auth');
+
 // author and version from our package.json file
 // TODO: make sure you have updated your name in the `author` section
 const { author, version } = require('../package.json');
@@ -30,22 +34,12 @@ app.use(cors());
 // Use gzip/deflate compression middleware
 app.use(compression());
 
-// Define a simple health check route. If the server is running
-// we'll respond with a 200 OK.  If not, the server isn't healthy.
-app.get('/', (req, res) => {
-  // Clients shouldn't cache this response (always request it fresh)
-  // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#controlling_caching
-  res.setHeader('Cache-Control', 'no-cache');
+//Setup passport auth middleware
+passport.use(authenticate.strategy());
+app.use(passport.initialize());
 
-  // Send a 200 'OK' response with info about our repo
-  res.status(200).json({
-    status: 'ok',
-    author,
-    // TODO: change this to use your GitHub username!
-    githubUrl: 'https://github.com/HTSagara/fragments',
-    version,
-  });
-});
+// Define our routes
+app.use('/', require('./routes'));
 
 // Add 404 middleware to handle any requests for resources that can't be found
 app.use((req, res) => {
