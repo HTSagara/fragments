@@ -7,7 +7,8 @@ const compression = require('compression');
 
 // Passport.js
 const passport = require('passport');
-const authenticate = require('./auth');
+// const authenticate = require('./auth/index');
+const authenticate = require('./auth/index');
 
 // author and version from our package.json file
 // TODO: make sure you have updated your name in the `author` section

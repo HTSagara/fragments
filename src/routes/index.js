@@ -10,7 +10,8 @@ const { version, author } = require('../../package.json');
 const router = express.Router();
 
 //Authentication middleware
-const { authenticate } = require('../auth.js');
+// const { authenticate } = require('../auth/cognito');
+const { authenticate } = require('../auth/index');
 
 /**
  * Expose all of our API routes on /v1/* to include an API version.
