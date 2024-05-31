@@ -6,8 +6,8 @@ const {
   writeFragmentData,
 } = require('../../src/model/data/index');
 
-// Import the MemoryDB class
-const MemoryDB = require('../../src/model/data/memory/memory-db');
+// // Import the MemoryDB class
+// const MemoryDB = require('../../src/model/data/memory/memory-db');
 
 describe('MemoryDB Functions', () => {
   test('writeFragment stores a fragment in MemoryDB and readFragment', async () => {
