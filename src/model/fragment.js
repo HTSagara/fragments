@@ -14,9 +14,40 @@ const {
   deleteFragment,
 } = require('./data');
 
+const validTypes = [
+  `text/plain`,
+  `text/markdown`,
+  `text/html`,
+  `application/json`,
+  `image/png`,
+  `image/jpeg`,
+  `image/webp`,
+  `image/gif`,
+];
+
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
     // TODO
+    const splitType = type.split(';');
+    if (!ownerId || !type) {
+      throw new Error('ownerId and type are required');
+    } else if (typeof size != 'number') {
+      throw new Error('size must be a number');
+    } else if (size < 0) {
+      throw new Error('size cannot be negative');
+    } else if (!validTypes.includes(splitType[0])) {
+      throw new Error('invalid types');
+    } else if (!id) {
+      id = randomUUID();
+    }
+    this.id = id;
+    this.ownerId = ownerId;
+    this.created = created;
+    this.updated = updated;
+    this.type = type;
+    this.size = size;
+    this.created = new Date();
+    this.updated = new Date();
   }
 
   /**
@@ -27,6 +58,8 @@ class Fragment {
    */
   static async byUser(ownerId, expand = false) {
     // TODO
+    const result = await listFragments(ownerId, expand);
+    return result;
   }
 
   /**
@@ -37,6 +70,9 @@ class Fragment {
    */
   static async byId(ownerId, id) {
     // TODO
+    const fragmentData = await readFragment(ownerId, id);
+    if (!fragmentData) throw new Error(`Fragment not found: ownerId=${ownerId}, id=${id}`);
+    return new Fragment(fragmentData);
   }
 
   /**
@@ -47,6 +83,7 @@ class Fragment {
    */
   static delete(ownerId, id) {
     // TODO
+    deleteFragment(ownerId, id);
   }
 
   /**
@@ -55,6 +92,8 @@ class Fragment {
    */
   save() {
     // TODO
+    this.updated = new Date();
+    writeFragment(this);
   }
 
   /**
@@ -63,6 +102,7 @@ class Fragment {
    */
   getData() {
     // TODO
+    return readFragmentData(this.ownerId, this.id);
   }
 
   /**
@@ -72,6 +112,10 @@ class Fragment {
    */
   async setData(data) {
     // TODO
+    this.size = data.length;
+    this.updated = new Date();
+    await writeFragmentData(this.ownerId, this.id, data);
+    await this.save();
   }
 
   /**
@@ -90,6 +134,7 @@ class Fragment {
    */
   get isText() {
     // TODO
+    return this.type.startsWith('text/');
   }
 
   /**
@@ -98,6 +143,9 @@ class Fragment {
    */
   get formats() {
     // TODO
+    var formats = [];
+    formats.push(this.mimeType);
+    return formats;
   }
 
   /**
@@ -107,6 +155,9 @@ class Fragment {
    */
   static isSupportedType(value) {
     // TODO
+    const { type } = contentType.parse(value);
+    const supportedTypes = ['text/plain', 'text/html', 'application/json']; // Add supported types here
+    return supportedTypes.includes(type);
   }
 }
 
