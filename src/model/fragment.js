@@ -28,26 +28,25 @@ const validTypes = [
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
     // TODO
-    const splitType = type.split(';');
     if (!ownerId || !type) {
       throw new Error('ownerId and type are required');
-    } else if (typeof size != 'number') {
-      throw new Error('size must be a number');
-    } else if (size < 0) {
-      throw new Error('size cannot be negative');
-    } else if (!validTypes.includes(splitType[0])) {
-      throw new Error('invalid types');
-    } else if (!id) {
-      id = randomUUID();
     }
-    this.id = id;
+    if (typeof size !== 'number') {
+      throw new Error('size must be a number');
+    }
+    if (size < 0) {
+      throw new Error('size cannot be negative');
+    }
+    if (!Fragment.isSupportedType(type)) {
+      throw new Error(`Invalid type: ${type}`);
+    }
+
+    this.id = id || randomUUID();
     this.ownerId = ownerId;
-    this.created = created;
-    this.updated = updated;
+    this.created = created || new Date().toISOString();
+    this.updated = updated || new Date().toISOString();
     this.type = type;
     this.size = size;
-    this.created = new Date();
-    this.updated = new Date();
   }
 
   /**
@@ -90,19 +89,19 @@ class Fragment {
    * Saves the current fragment to the database
    * @returns Promise<void>
    */
-  save() {
+  async save() {
     // TODO
-    this.updated = new Date();
-    writeFragment(this);
+    await writeFragment(this);
+    this.updated = new Date().toISOString();
   }
 
   /**
    * Gets the fragment's data from the database
    * @returns Promise<Buffer>
    */
-  getData() {
+  async getData() {
     // TODO
-    return readFragmentData(this.ownerId, this.id);
+    return await readFragmentData(this.ownerId, this.id);
   }
 
   /**
@@ -112,10 +111,12 @@ class Fragment {
    */
   async setData(data) {
     // TODO
+    if (!(data instanceof Buffer)) {
+      throw new Error('setData expects a Buffer');
+    }
     this.size = data.length;
-    this.updated = new Date();
     await writeFragmentData(this.ownerId, this.id, data);
-    await this.save();
+    this.updated = new Date().toISOString();
   }
 
   /**
@@ -143,9 +144,7 @@ class Fragment {
    */
   get formats() {
     // TODO
-    var formats = [];
-    formats.push(this.mimeType);
-    return formats;
+    return [this.mimeType];
   }
 
   /**
@@ -156,8 +155,7 @@ class Fragment {
   static isSupportedType(value) {
     // TODO
     const { type } = contentType.parse(value);
-    const supportedTypes = ['text/plain', 'text/html', 'application/json']; // Add supported types here
-    return supportedTypes.includes(type);
+    return ['text/plain', 'text/markdown', 'text/html', 'application/json'].includes(type);
   }
 }
 
