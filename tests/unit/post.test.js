@@ -2,7 +2,7 @@ const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
 const app = require('../../src/app');
-const { Fragment } = require('../../src/model/fragment');
+// const { Fragment } = require('../../src/model/fragment');
 
 // Set up a temporary htpasswd file for testing
 const htpasswdFilePath = path.join(__dirname, 'htpasswd');
