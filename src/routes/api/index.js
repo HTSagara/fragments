@@ -1,6 +1,5 @@
 const express = require('express');
 const contentType = require('content-type');
-const passport = require('passport');
 const { Fragment } = require('../../model/fragment');
 const createFragment = require('./post');
 
@@ -24,11 +23,6 @@ const rawBody = () =>
   });
 
 // Use a raw body parser for POST, which will give a `Buffer` Object or `{}` at `req.body`
-router.post(
-  '/fragments',
-  passport.authenticate('http', { session: false }),
-  rawBody(),
-  createFragment
-);
+router.post('/fragments', rawBody(), createFragment);
 
 module.exports = router;

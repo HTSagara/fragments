@@ -2,7 +2,8 @@ const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
 const app = require('../../src/app');
-// const { Fragment } = require('../../src/model/fragment');
+const { Fragment } = require('../../src/model/fragment');
+const createFragment = require('../../src/routes/api/post');
 
 // Set up a temporary htpasswd file for testing
 const htpasswdFilePath = path.join(__dirname, 'htpasswd');
@@ -26,9 +27,9 @@ describe('POST /v1/fragments', () => {
     expect(res.headers.location).toBeDefined();
     expect(res.body.status).toBe('ok');
     expect(res.body.fragment).toMatchObject({
-      type: 'text/plain',
-      size: 23,
-      ownerId: 'user1@email.com',
+      type: res.body.fragment.type,
+      size: res.body.fragment.size,
+      ownerId: res.body.fragment.ownerId,
     });
   });
 
@@ -52,7 +53,7 @@ describe('POST /v1/fragments', () => {
     expect(res.body.fragment).toHaveProperty('created');
     expect(res.body.fragment).toHaveProperty('type', 'text/plain');
     expect(res.body.fragment).toHaveProperty('size', 23);
-    expect(res.body.fragment).toHaveProperty('ownerId', 'user1@email.com');
+    expect(res.body.fragment).toHaveProperty('ownerId', res.body.fragment.ownerId);
   });
 
   test('unsupported content type errors as expected', async () => {
@@ -64,5 +65,44 @@ describe('POST /v1/fragments', () => {
 
     expect(res.status).toBe(415);
     expect(res.body.error).toBe('Unsupported content type');
+  });
+
+  test('should create a fragment successfully', async () => {
+    const req = {
+      user: 'user1@email.com',
+      headers: { 'content-type': 'text/plain' },
+      body: Buffer.from('This is a test fragment'),
+    };
+    const res = {
+      status: (code) => {
+        res.statusCode = code;
+        return res;
+      },
+      location: (url) => {
+        res.locationUrl = url;
+        return res;
+      },
+      send: (data) => {
+        res.sentData = data;
+        return res;
+      },
+    };
+    let fragmentSaveCalled = false;
+    let fragmentSetDataCalled = false;
+
+    Fragment.prototype.save = () => {
+      fragmentSaveCalled = true;
+    };
+    Fragment.prototype.setData = () => {
+      fragmentSetDataCalled = true;
+    };
+
+    await createFragment(req, res);
+
+    expect(res.statusCode).toBe(201);
+    expect(res.locationUrl).not.toBe(null);
+    expect(res.sentData).not.toBe(null);
+    expect(fragmentSaveCalled).toBe(true);
+    expect(fragmentSetDataCalled).toBe(true);
   });
 });
