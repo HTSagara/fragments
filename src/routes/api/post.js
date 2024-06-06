@@ -8,12 +8,7 @@ const createFragment = async (req, res) => {
 
   // Parse Content-Type header
   let parsedType;
-  try {
-    parsedType = contentType.parse(headers['content-type']);
-  } catch (error) {
-    logger.error('Failed to parse content-type', error);
-    return res.status(400).send({ error: 'Invalid Content-Type header' });
-  }
+  parsedType = contentType.parse(headers['content-type']);
 
   // Check if the type is supported
   if (!Fragment.isSupportedType(parsedType.type)) {

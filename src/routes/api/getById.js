@@ -1,6 +1,6 @@
 // src/routes/api/getById.js
 
-const { createSuccessResponse, createErrorResponse } = require('../../response');
+const { createErrorResponse } = require('../../response');
 const { Fragment } = require('../../model/fragment');
 
 const getFragmentById = async (req, res) => {
@@ -11,11 +11,7 @@ const getFragmentById = async (req, res) => {
     const fragment = await Fragment.byId(ownerId, id);
     const data = await fragment.getData();
     res.set('Content-Type', fragment.type);
-    res.status(200).json(
-      createSuccessResponse({
-        data,
-      })
-    );
+    res.send(data);
   } catch (err) {
     if (err.message.includes('Fragment not found')) {
       res.status(404).json(createErrorResponse(404, 'Fragment not found'));
