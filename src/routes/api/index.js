@@ -2,6 +2,7 @@ const express = require('express');
 const contentType = require('content-type');
 const { Fragment } = require('../../model/fragment');
 const createFragment = require('./post');
+const getFragmentById = require('./getById');
 
 require('../../auth/basic-auth');
 
@@ -10,6 +11,7 @@ const router = express.Router();
 
 // Define our first route, which will be: GET /v1/fragments
 router.get('/fragments', require('./get'));
+router.get('/fragments/:id', getFragmentById);
 
 // Support sending various Content-Types on the body up to 5M in size
 const rawBody = () =>

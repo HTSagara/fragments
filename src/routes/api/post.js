@@ -45,12 +45,14 @@ const createFragment = async (req, res) => {
       .location(location)
       .send({
         status: 'ok',
+        location: location,
         fragment: {
           id: fragment.id,
+          ownerId: fragment.ownerId,
           created: fragment.created,
+          updated: fragment.updated,
           type: fragment.type,
           size: fragment.size,
-          ownerId: fragment.ownerId,
         },
       });
   } catch (error) {
