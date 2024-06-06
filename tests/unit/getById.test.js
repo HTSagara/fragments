@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const getFragmentById = require('../../src/routes/api/getById');
 const { Fragment } = require('../../src/model/fragment');
-const { createSuccessResponse, createErrorResponse } = require('../../src/response');
+const { createErrorResponse } = require('../../src/response');
 
 const app = express();
 app.use(bodyParser.json());
