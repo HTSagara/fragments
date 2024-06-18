@@ -1,8 +1,7 @@
 # This file gives the instructions as commands from the user to call from the terminal to assemble an image
 
-# Specifies the parent imageas a starting point
-# Adding a :tag specifies a particular version of the image
-FROM node:18.13.0
+# Build Stage
+FROM node:18.13.0 AS build
 
 # Image's metadata
 LABEL maintainer="Henrique Sagara <hsagara@myseneca.ca>"
