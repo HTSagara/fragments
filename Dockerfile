@@ -1,7 +1,7 @@
 # This file gives the instructions as commands from the user to call from the terminal to assemble an image
 
 # Stage 0: install the base dependencies
-FROM node:18.13.0 AS dependencies
+FROM node:18.13.0-bullseye@sha256:d871edd5b68105ebcbfcde3fe8c79d24cbdbb30430d9bd6251c57c56c7bd7646 AS dependencies
 
 # Defining environments variables
 ENV NODE_ENV=production
@@ -19,15 +19,12 @@ RUN npm install
 #################################################################
 
 # Stage 1: Build Stage
-FROM node:18.13.0 AS build
+FROM node:18.13.0-bullseye@sha256:d871edd5b68105ebcbfcde3fe8c79d24cbdbb30430d9bd6251c57c56c7bd7646 AS build
 
 # Image's metadata
 LABEL maintainer="Henrique Sagara <hsagara@myseneca.ca>"
 LABEL description="Fragments node.js microservice"
 
-# Defining environments variables
-# We default to use port 8080 in our service
-ENV PORT=8080
 
 # Reduce npm spam when installing within Docker
 # https://docs.npmjs.com/cli/v8/using-npm/config#loglevel
@@ -37,8 +34,10 @@ ENV NPM_CONFIG_LOGLEVEL=warn
 # https://docs.npmjs.com/cli/v8/using-npm/config#color
 ENV NPM_CONFIG_COLOR=false
 
-# Use /app as our working directory
 WORKDIR /app
+
+# Copy the generated dependencies (node_modules/)
+COPY --from=dependencies /app /app
 
 # Option 1: explicit path - Copy the package.json and package-lock.json
 # files into /app. NOTE: the trailing `/` on `/app/`, which tells Docker
