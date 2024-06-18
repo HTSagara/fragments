@@ -1,6 +1,24 @@
 # This file gives the instructions as commands from the user to call from the terminal to assemble an image
 
-# Build Stage
+# Stage 0: install the base dependencies
+FROM node:18.13.0 AS dependencies
+
+# Defining environments variables
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Use /app as our working directory
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files into /app
+COPY package*.json ./
+
+# Install node dependencies defined in package-lock.json
+RUN npm install
+
+#################################################################
+
+# Stage 1: Build Stage
 FROM node:18.13.0 AS build
 
 # Image's metadata
@@ -35,6 +53,15 @@ COPY ./src ./src
 
 # Copy our HTPASSWD file
 COPY ./tests/.htpasswd ./tests/.htpasswd
+
+#####################################################################
+
+# Stage 2: Run Stage
+FROM node:18.13.0-alpine
+
+# Copy built node_modules and source code from build stage
+WORKDIR /app
+COPY --from=build /app /app
 
 # Run the server
 CMD npm start
