@@ -9,9 +9,10 @@ const { Fragment } = require('../../model/fragment');
 module.exports = async (req, res) => {
   try {
     const ownerId = req.user;
+    const expand = req.query.expand === '1';
     console.log(ownerId);
     // Fetch the fragments for the current user
-    const fragments = await Fragment.byUser(ownerId);
+    const fragments = await Fragment.byUser(ownerId, expand);
 
     // Return the fragments in the response
     res.status(200).json(
