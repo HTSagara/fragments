@@ -1,30 +1,27 @@
 // src/routes/api/getById.js
-
-const { createErrorResponse, createSuccessResponse } = require('../../response');
 const { Fragment } = require('../../model/fragment');
+const logger = require('../../logger');
 
-const getFragmentById = async (req, res) => {
+module.exports = async (req, res) => {
   const { id } = req.params;
   const ownerId = req.user;
 
   try {
     const fragment = await Fragment.byId(ownerId, id);
-    const data = await fragment.getData();
+    let data = await fragment.getData();
 
-    // res.set('Content-Type', fragment.type);
-    // res.send(data);
-    res.status(200).json(
-      createSuccessResponse({
-        data,
-      })
-    );
-  } catch (err) {
-    if (err.message.includes('Fragment not found')) {
-      res.status(404).json(createErrorResponse(404, 'Fragment not found'));
+    // Handle conversion if requested
+    const format = req.params.ext;
+    if (format && fragment.formats.includes(`text/${format}`)) {
+      data = await fragment.convertTo(format);
+      res.set('Content-Type', `text/${format}`);
     } else {
-      res.status(500).json(createErrorResponse(500, 'Internal Server Error'));
+      res.set('Content-Type', fragment.type);
     }
+
+    res.send(data);
+  } catch (err) {
+    logger.error('Failed to get fragment by id', err);
+    res.status(404).json({ error: 'Fragment not found' });
   }
 };
-
-module.exports = getFragmentById;

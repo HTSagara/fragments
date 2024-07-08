@@ -14,6 +14,10 @@ const {
   deleteFragment,
 } = require('./data');
 
+const MarkdownIt = require('markdown-it');
+const md = new MarkdownIt();
+const contentType = require('content-type');
+
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
     // TODO
@@ -132,8 +136,11 @@ class Fragment {
    * @returns {Array<string>} list of supported mime types
    */
   get formats() {
-    // TODO
-    return [this.mimeType];
+    const formats = [this.mimeType];
+    if (this.type === 'text/markdown') {
+      formats.push('text/html');
+    }
+    return formats;
   }
 
   /**
@@ -145,6 +152,20 @@ class Fragment {
     // TODO
     const { type } = contentType.parse(value);
     return ['text/plain', 'text/markdown', 'text/html', 'application/json'].includes(type);
+  }
+
+  /**
+   * Convert fragment data to a specified format
+   * @param {string} format the format to convert to (e.g., 'html')
+   * @returns {Buffer}
+   */
+  async convertTo(format) {
+    const data = await this.getData();
+    if (this.type === 'text/markdown' && format === 'html') {
+      const html = md.render(data.toString());
+      return Buffer.from(html);
+    }
+    throw new Error(`Unsupported conversion: ${this.type} to ${format}`);
   }
 }
 

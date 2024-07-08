@@ -10,8 +10,6 @@ const getFragmentInfoById = async (req, res) => {
   try {
     const fragment = await Fragment.byId(ownerId, id);
 
-    console.log('Passed');
-
     createSuccessResponse(
       res.status(200).json({
         status: 'ok',

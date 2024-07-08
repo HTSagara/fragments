@@ -1,58 +1,43 @@
+// src/routes/api/post.js
 const { Fragment } = require('../../model/fragment');
-const contentType = require('content-type');
 const logger = require('../../logger');
+const { createSuccessResponse, createErrorResponse } = require('../../response');
 
 // Create a new fragment
 const createFragment = async (req, res) => {
   const { headers, body } = req;
+  const ownerId = req.user;
 
   // Parse Content-Type header
-  let parsedType;
-  parsedType = contentType.parse(headers['content-type']);
+  const type = req.get('Content-Type');
+
+  logger.info({ ownerId, type }, `Calling POST ${req.originalUrl}`);
 
   // Check if the type is supported
-  if (!Fragment.isSupportedType(parsedType.type)) {
-    logger.error('Unsupported content type', parsedType.type);
-    return res.status(415).send({ error: 'Unsupported content type' });
-  }
-
-  // Ensure the request body is a buffer
-  if (!Buffer.isBuffer(body)) {
-    return res.status(400).send({ error: 'Invalid body' });
+  if (!Fragment.isSupportedType(type)) {
+    const errorResponse = createErrorResponse(415, 'Unsupported content type');
+    logger.warn({ errorResponse }, 'Failed to create a new fragment');
+    return res.status(415).json(errorResponse);
   }
 
   try {
-    // Create a new fragment
-    const fragment = new Fragment({
-      ownerId: req.user,
-      type: parsedType.type,
-      size: body.length,
-    });
-    await fragment.save();
+    const fragment = new Fragment({ ownerId, type });
     await fragment.setData(body);
+    await fragment.save();
 
-    // Construct the URL for the Location header
-    const baseUrl = process.env.API_URL || `http://${req.headers.host}`;
-    const location = new URL(`/v1/fragments/${fragment.id}`, baseUrl).toString();
+    const baseUrl = process.env.API_URL || req.headers.host;
+    const location = `${baseUrl}/v1/fragments/${fragment.id}`;
 
-    res
-      .status(201)
-      .location(location)
-      .send({
-        status: 'ok',
-        location: location,
-        fragment: {
-          id: fragment.id,
-          ownerId: fragment.ownerId,
-          created: fragment.created,
-          updated: fragment.updated,
-          type: fragment.type,
-          size: fragment.size,
-        },
-      });
-  } catch (error) {
-    logger.error('Failed to create fragment', error);
-    res.status(500).send({ error: 'Internal Server Error' });
+    res.set('Location', location);
+    res.set('Access-Control-Expose-Headers', 'Location');
+
+    const successResponse = createSuccessResponse({ fragment });
+    logger.debug({ successResponse }, 'A new fragment has been created');
+
+    res.status(201).json(successResponse);
+  } catch (err) {
+    logger.error('Failed to create fragment', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
