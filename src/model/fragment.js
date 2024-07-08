@@ -16,7 +16,6 @@ const {
 
 const MarkdownIt = require('markdown-it');
 const md = new MarkdownIt();
-const contentType = require('content-type');
 
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
