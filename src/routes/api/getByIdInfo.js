@@ -3,19 +3,19 @@
 const { createErrorResponse, createSuccessResponse } = require('../../response');
 const { Fragment } = require('../../model/fragment');
 
-const getFragmentById = async (req, res) => {
+const getFragmentInfoById = async (req, res) => {
   const { id } = req.params;
   const ownerId = req.user;
 
   try {
     const fragment = await Fragment.byId(ownerId, id);
-    const data = await fragment.getData();
 
-    // res.set('Content-Type', fragment.type);
-    // res.send(data);
-    res.status(200).json(
-      createSuccessResponse({
-        data,
+    console.log('Passed');
+
+    createSuccessResponse(
+      res.status(200).json({
+        status: 'ok',
+        fragment: fragment,
       })
     );
   } catch (err) {
@@ -27,4 +27,4 @@ const getFragmentById = async (req, res) => {
   }
 };
 
-module.exports = getFragmentById;
+module.exports = getFragmentInfoById;
