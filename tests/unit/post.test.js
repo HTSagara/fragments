@@ -4,6 +4,7 @@ const path = require('path');
 const app = require('../../src/app');
 const { Fragment } = require('../../src/model/fragment');
 const createFragment = require('../../src/routes/api/post');
+const { createErrorResponse } = require('../../src/response');
 
 // Set up a temporary htpasswd file for testing
 const htpasswdFilePath = path.join(__dirname, 'htpasswd');
@@ -27,9 +28,9 @@ describe('POST /v1/fragments', () => {
     expect(res.headers.location).toBeDefined();
     expect(res.body.status).toBe('ok');
     expect(res.body.fragment).toMatchObject({
-      type: res.body.fragment.type,
-      size: res.body.fragment.size,
-      ownerId: res.body.fragment.ownerId,
+      type: 'text/plain',
+      size: 23,
+      ownerId: expect.any(String),
     });
   });
 
@@ -64,45 +65,16 @@ describe('POST /v1/fragments', () => {
       .send('<test>This is a test fragment</test>');
 
     expect(res.status).toBe(415);
-    expect(res.body.error).toBe('Unsupported content type');
+    expect(res.body).toEqual(createErrorResponse(415, 'Unsupported content type'));
   });
 
   test('should create a fragment successfully', async () => {
-    const req = {
-      user: 'user1@email.com',
-      headers: { 'content-type': 'text/plain' },
-      body: Buffer.from('This is a test fragment'),
-    };
-    const res = {
-      status: (code) => {
-        res.statusCode = code;
-        return res;
-      },
-      location: (url) => {
-        res.locationUrl = url;
-        return res;
-      },
-      send: (data) => {
-        res.sentData = data;
-        return res;
-      },
-    };
-    let fragmentSaveCalled = false;
-    let fragmentSetDataCalled = false;
+    const res = await request(app)
+      .post('/v1/fragments')
+      .auth('user1@email.com', 'password1')
+      .set('Content-Type', 'text/plain')
+      .send('<test>This is a test fragment</test>');
 
-    Fragment.prototype.save = () => {
-      fragmentSaveCalled = true;
-    };
-    Fragment.prototype.setData = () => {
-      fragmentSetDataCalled = true;
-    };
-
-    await createFragment(req, res);
-
-    expect(res.statusCode).toBe(201);
-    expect(res.locationUrl).not.toBe(null);
-    expect(res.sentData).not.toBe(null);
-    expect(fragmentSaveCalled).toBe(true);
-    expect(fragmentSetDataCalled).toBe(true);
+    expect(res.status).toBe(201);
   });
 });

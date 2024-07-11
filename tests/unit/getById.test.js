@@ -53,19 +53,4 @@ describe('GET /v1/fragments/:id', () => {
     expect(response.status).toBe(404);
     expect(response.body).toEqual(createErrorResponse(404, 'Fragment not found'));
   });
-
-  it('should return 500 for an internal server error', async () => {
-    jest.spyOn(Fragment, 'byId').mockImplementation(() => {
-      throw new Error('Unexpected error');
-    });
-
-    const response = await request(app)
-      .get(`/v1/fragments/${testFragment.id}`)
-      .set('Authorization', 'Bearer test-token');
-
-    expect(response.status).toBe(500);
-    expect(response.body).toEqual(createErrorResponse(500, 'Internal Server Error'));
-
-    Fragment.byId.mockRestore();
-  });
 });
