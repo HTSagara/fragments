@@ -5,7 +5,7 @@ const { createSuccessResponse, createErrorResponse } = require('../../response')
 
 // Create a new fragment
 const createFragment = async (req, res) => {
-  const { headers, body } = req;
+  const { body } = req;
   const ownerId = req.user;
 
   // Parse Content-Type header

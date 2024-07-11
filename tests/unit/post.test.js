@@ -2,8 +2,8 @@ const request = require('supertest');
 const fs = require('fs');
 const path = require('path');
 const app = require('../../src/app');
-const { Fragment } = require('../../src/model/fragment');
-const createFragment = require('../../src/routes/api/post');
+// const { Fragment } = require('../../src/model/fragment');
+// const createFragment = require('../../src/routes/api/post');
 const { createErrorResponse } = require('../../src/response');
 
 // Set up a temporary htpasswd file for testing

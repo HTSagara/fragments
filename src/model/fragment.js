@@ -14,8 +14,8 @@ const {
   deleteFragment,
 } = require('./data');
 
-const MarkdownIt = require('markdown-it');
-const md = new MarkdownIt();
+// const MarkdownIt = require('markdown-it');
+// const md = new MarkdownIt();
 
 class Fragment {
   constructor({ id, ownerId, created, updated, type, size = 0 }) {
