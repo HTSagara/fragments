@@ -16,10 +16,10 @@ app.use((req, res, next) => {
 app.get('/v1/fragments/:id', getFragmentById);
 
 // Helper function to create a fragment in the database
-async function createTestFragment() {
+async function createTestFragment(type = 'text/plain; charset=utf-8') {
   const fragment = new Fragment({
     ownerId: 'test-owner-id',
-    type: 'text/plain; charset=utf-8',
+    type: type,
     size: 20,
   });
   await fragment.save();
@@ -30,12 +30,13 @@ async function createTestFragment() {
 describe('GET /v1/fragments/:id', () => {
   let testFragment;
 
-  beforeAll(async () => {
-    // Create a test fragment before running the tests
-    testFragment = await createTestFragment();
-  });
+  // beforeAll(async () => {
+  //   // Create a test fragment before running the tests
+  //   testFragment = await createTestFragment();
+  // });
 
   it('should return the fragment data for a valid fragment ID', async () => {
+    testFragment = await createTestFragment();
     const response = await request(app)
       .get(`/v1/fragments/${testFragment.id}`)
       .set('Authorization', 'Bearer test-token');
@@ -45,7 +46,20 @@ describe('GET /v1/fragments/:id', () => {
     expect(response.text).toBe('This is a test fragment');
   });
 
+  it('should return the .md fragment data converted to html', async () => {
+    testFragment = await createTestFragment('text/markdown');
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.md`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe('text/html; charset=utf-8');
+    expect(response.text).toBe('This is a test fragment');
+  });
+
   it('should return 404 for a non-existent fragment ID', async () => {
+    testFragment = await createTestFragment();
     const response = await request(app)
       .get('/v1/fragments/non-existent-id')
       .set('Authorization', 'Bearer test-token');

@@ -15,7 +15,6 @@ const router = express.Router();
 router.get('/fragments', require('./get'));
 router.get('/fragments/:id', getFragmentById);
 router.get('/fragments/:id/info', getFragmentInfoById);
-router.get('/fragments/:id.:ext', getFragmentById);
 
 // Support sending various Content-Types on the body up to 5M in size
 const rawBody = () =>
