@@ -12,24 +12,24 @@ user1@email.com:password1
 # 1. We expect to get back an HTTP 201
 HTTP/1.1 201
 [Asserts]
-header "Location" matches "^http:\/\/localhost:8080\/v1\/fragments\/[A-Za-z0-9_-]+$"
+header "Location" matches "^localhost:8080\/v1\/fragments\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 jsonpath "$.status" == "ok"
 jsonpath "$.fragment.id" matches "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 jsonpath "$.fragment.ownerId" matches "^[0-9a-fA-F]+$"
 jsonpath "$.fragment.created" isString
 jsonpath "$.fragment.updated" isString
 jsonpath "$.fragment.type" == "text/plain; charset=utf-8"
-jsonpath "$.fragment.size" == 31
+jsonpath "$.fragment.size" == 32
 [Captures]
 url: header "Location"
 
 # 2. Try to GET the fragment we just posted by its URL
-GET {{url}}
+GET http://{{url}}
 [BasicAuth]
 user1@email.com:password1
 
 HTTP/1.1 200
 Content-Type: text/plain; charset=utf-8
-Content-Length: 31
+Content-Length: 32
 [Asserts]
 body == "This is a fragment with charset!"
