@@ -5,6 +5,7 @@ const { Fragment } = require('../../model/fragment');
 const createFragment = require('./post');
 const getFragmentById = require('./getById');
 const getFragmentInfoById = require('./getByIdInfo');
+const deleteById = require('./deleteById');
 
 require('../../auth/basic-auth');
 
@@ -29,5 +30,8 @@ const rawBody = () =>
 
 // Use a raw body parser for POST, which will give a `Buffer` Object or `{}` at `req.body`
 router.post('/fragments', rawBody(), createFragment);
+
+// Route to delete by id
+router.delete('/fragments/:id', deleteById);
 
 module.exports = router;
