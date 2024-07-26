@@ -11,13 +11,13 @@ user1@email.com:password1
 
 HTTP/1.1 201
 [Asserts]
-header "Location" matches "^localhost:8080\/v1\/fragments\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+header "Location" matches "http://localhost:8080\/v1\/fragments\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 jsonpath "$.status" == "ok"
 [Captures]
 url: header "Location"
 
 # Get the fragment
-GET http://{{url}}
+GET {{url}}
 [BasicAuth]
 user1@email.com:password1
 
@@ -27,7 +27,7 @@ Content-Type: text/plain; charset=utf-8
 body == "Test S3"
 
 # Delete the fragment
-DELETE http://{{url}}
+DELETE {{url}}
 [BasicAuth]
 user1@email.com:password1
 
@@ -37,7 +37,7 @@ jsonpath "$.status" == "ok"
 jsonpath "$.message" matches "Fragment [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12} was deleted"
 
 # Confirm the fragment is deleted
-GET http://{{url}}
+GET {{url}}
 [BasicAuth]
 user1@email.com:password1
 
