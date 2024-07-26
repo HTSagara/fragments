@@ -40,6 +40,10 @@
         {
           "name": "HTPASSWD_FILE",
           "value": "tests/.htpasswd"
+        },
+        {
+          "name": "AWS_S3_BUCKET_NAME",
+          "value": "hsagara-fragments"
         }
       ],
       "environmentFiles": [],
@@ -61,6 +65,7 @@
   ],
   "family": "fragments-task",
   "taskRoleArn": "arn:aws:iam::029794071130:role/LabRole",
+  "ipcMode": null,
   "executionRoleArn": "arn:aws:iam::029794071130:role/LabRole",
   "networkMode": "awsvpc",
   "revision": 1,
