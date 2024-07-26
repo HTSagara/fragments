@@ -4,7 +4,7 @@ const express = require('express');
 
 // version and author from package.json
 const { version, author } = require('../../package.json');
-// const { authenticate } = require('passport');
+const { hostname } = require('os');
 
 // Create a router that we can use to mount our API
 const router = express.Router();
@@ -36,9 +36,10 @@ router.get('/', (req, res) => {
   // Send a 200 'OK' response
   res.status(200).json(
     createSuccessResponse({
-      author,
+      author: 'Henrique Sagara',
       githubUrl: 'https://github.com/htsagara/fragments',
       version,
+      hostname: hostname(),
     })
   );
 });
