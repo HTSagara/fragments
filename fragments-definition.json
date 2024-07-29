@@ -18,8 +18,8 @@
       "essential": true,
       "environment": [
         {
-          "name": "AWS_S3_ENDPOINT_URL",
-          "value": "http://localhost:4566"
+          "name": "NODE_ENV",
+          "value": "production"
         },
         {
           "name": "AWS_COGNITO_POOL_ID",
