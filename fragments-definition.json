@@ -22,8 +22,8 @@
           "value": "production"
         },
         {
-          "name": "AWS_DYNAMODB_TABLE_NAME",
-          "value": "fragments"
+          "name": "AWS_COGNITO_POOL_ID",
+          "value": "us-east-1_Lwm3rYNdl"
         },
         {
           "name": "PORT",
@@ -32,6 +32,10 @@
         {
           "name": "LOG_LEVEL",
           "value": "debug"
+        },
+        {
+          "name": "AWS_COGNITO_CLIENT_ID",
+          "value": "1cvod9af862m7t8lr8bfmvpk0i"
         },
         {
           "name": "HTPASSWD_FILE",
