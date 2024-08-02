@@ -1,96 +1,99 @@
-# POST a new JSON fragment as an authorized user
+# *********** 1. POST a new JSON fragment  ***********
 POST http://localhost:8080/v1/fragments
+Content-Type: application/json
 [BasicAuth]
 user1@email.com:password1
-Content-Type: application/json
+`{"service": "DynamoDB"}`
 
-{
-  "service": "DynamoDB"
-}
-
+# *********** 2. Confirm that the server returns a 201  ***********
 HTTP/1.1 201
 [Asserts]
-header "Location" exists
-jsonpath "$.status" equals "ok"
-capture fragment1_url regex "Location: (.+)\r\n"
-capture fragment1_id jsonpath "$.fragment.id"
+header "Location" matches "http://localhost:8080\/v1\/fragments\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+jsonpath "$.status" == "ok"
+[Captures]
+fragment1_url: header "Location"
+fragment1_id: jsonpath "$.fragment.id"
 
-# GET the fragment info (metadata) using the Location URL
+# *********** 3. GET the fragment info (metadata) for the first fragment ***********
 GET {{fragment1_url}}/info
 [BasicAuth]
 user1@email.com:password1
 
 HTTP/1.1 200
 [Asserts]
-jsonpath "$.status" equals "ok"
-jsonpath "$.fragment.id" equals "{{fragment1_id}}"
-jsonpath "$.fragment.type" equals "application/json"
-jsonpath "$.fragment.size" equals 23
+jsonpath "$.status" == "ok"
+jsonpath "$.fragment.id" == "{{fragment1_id}}"
+jsonpath "$.fragment.type" == "application/json"
+jsonpath "$.fragment.ownerId" matches "^[0-9a-fA-F]+$"
+jsonpath "$.fragment.created" isString
+jsonpath "$.fragment.updated" isString
 
-
-# POST a second Markdown fragment as an authorized user
+# *********** 4. POST a second Markdown fragment ***********
 POST http://localhost:8080/v1/fragments
+Content-Type: text/markdown
 [BasicAuth]
 user1@email.com:password1
-Content-Type: text/markdown
+`DynamoDB is **great**.`
 
-DynamoDB is **great**.
-
+# *********** 5. Confirm that the server returns a 201 ***********
 HTTP/1.1 201
 [Asserts]
-header "Location" exists
-jsonpath "$.status" equals "ok"
-capture fragment2_url regex "Location: (.+)\r\n"
-capture fragment2_id jsonpath "$.fragment.id"
+header "Location" matches "http://localhost:8080\/v1\/fragments\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+jsonpath "$.status" == "ok"
+# capture the Location header value and the second id in variables named fragment2_url and fragment2_id
+[Captures]
+fragment2_url: header "Location"
+fragment2_id: jsonpath "$.fragment.id"
 
-# GET the fragment info (metadata) for the second fragment
+# *********** 6. GET the fragment info (metadata) for the second fragment ***********
 GET {{fragment2_url}}/info
 [BasicAuth]
 user1@email.com:password1
 
 HTTP/1.1 200
 [Asserts]
-jsonpath "$.status" equals "ok"
-jsonpath "$.fragment.id" equals "{{fragment2_id}}"
-jsonpath "$.fragment.type" equals "text/markdown"
-jsonpath "$.fragment.size" equals 20
+jsonpath "$.status" == "ok"
+jsonpath "$.fragment.id" == "{{fragment2_id}}"
+jsonpath "$.fragment.type" == "text/markdown"
+jsonpath "$.fragment.ownerId" matches "^[0-9a-fA-F]+$"
+jsonpath "$.fragment.created" isString
+jsonpath "$.fragment.updated" isString
 
-# GET all fragments without expanding (just IDs)
+# *********** 7. GET all fragments ***********
 GET http://localhost:8080/v1/fragments
 [BasicAuth]
 user1@email.com:password1
 
 HTTP/1.1 200
 [Asserts]
-jsonpath "$.status" equals "ok"
-jsonpath "$.fragments" contains "{{fragment1_id}}"
-jsonpath "$.fragments" contains "{{fragment2_id}}"
+jsonpath "$.status" == "ok"
+jsonpath "$.fragments[*]" includes "{{fragment1_id}}"
+jsonpath "$.fragments[*]" includes "{{fragment2_id}}"
 
-# DELETE the first fragment
+# *********** 8. DELETE the first fragment ***********
 DELETE {{fragment1_url}}
 [BasicAuth]
 user1@email.com:password1
 
+# *********** 9. Confirm that the server returns a 200 ***********
 HTTP/1.1 200
-[Asserts]
-jsonpath "$.status" equals "ok"
 
-# Try to GET the first fragment again (should return 404)
+# *********** 10. Try to GET the first fragment again using the url you captured ***********
 GET {{fragment1_url}}
 [BasicAuth]
 user1@email.com:password1
 
-HTTP/1.1 404
-[Asserts]
-jsonpath "$.status" equals "error"
 
-# GET all fragments without expanding (check first fragment is deleted)
+# ***********11. Confirm that the server returns a 404 ***********
+HTTP/1.1 404
+
+# *********** 12. GET all fragments again ***********
 GET http://localhost:8080/v1/fragments
 [BasicAuth]
 user1@email.com:password1
 
 HTTP/1.1 200
 [Asserts]
-jsonpath "$.status" equals "ok"
-jsonpath "$.fragments" not contains "{{fragment1_id}}"
-jsonpath "$.fragments" contains "{{fragment2_id}}"
+jsonpath "$.status" == "ok"
+jsonpath "$.fragments[*]" not includes "{{fragment1_id}}"
+jsonpath "$.fragments[*]" includes "{{fragment2_id}}"

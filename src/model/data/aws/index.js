@@ -8,24 +8,24 @@ const { PutCommand, GetCommand, QueryCommand, DeleteCommand } = require('@aws-sd
 const logger = require('../../../logger');
 
 // Create two in-memory databases: one for fragment metadata and the other for raw data
-// const data = new MemoryDB();
-const metadata = new MemoryDB();
 
 // Writes a fragment to DynamoDB. Returns a Promise.
-function writeFragment(fragment) {
-  // Configure our PUT params, with the name of the table and item (attributes and keys)
+async function writeFragment(fragment) {
   const params = {
     TableName: process.env.AWS_DYNAMODB_TABLE_NAME,
     Item: fragment,
   };
 
-  // Create a PUT command to send to DynamoDB
   const command = new PutCommand(params);
 
   try {
-    return ddbDocClient.send(command);
+    console.log('Attempting to write fragment:', params);
+    const result = await ddbDocClient.send(command);
+    console.log('Write fragment result:', result);
+    return result;
   } catch (err) {
     logger.warn({ err, params, fragment }, 'error writing fragment to DynamoDB');
+    console.error('Error details:', err);
     throw err;
   }
 }
