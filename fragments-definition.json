@@ -22,12 +22,28 @@
           "value": "production"
         },
         {
+          "name": "AWS_COGNITO_POOL_ID",
+          "value": "us-east-1_Lwm3rYNdl"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "us-east-1"
+        },
+        {
           "name": "PORT",
           "value": "80"
         },
         {
           "name": "LOG_LEVEL",
           "value": "debug"
+        },
+        {
+          "name": "AWS_COGNITO_CLIENT_ID",
+          "value": "1cvod9af862m7t8lr8bfmvpk0i"
+        },
+        {
+          "name": "API_URL",
+          "value": "http://fragments-lb-1354866106.us-east-1.elb.amazonaws.com"
         },
         {
           "name": "HTPASSWD_FILE",
