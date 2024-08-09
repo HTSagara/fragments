@@ -4,6 +4,9 @@ const { randomUUID } = require('crypto');
 // Use https://www.npmjs.com/package/content-type to create/parse Content-Type headers
 const contentType = require('content-type');
 
+const markdown = require('markdown-it')();
+const { Buffer } = require('buffer');
+
 // Functions for working with fragment metadata/data using our DB
 const {
   readFragment,
@@ -160,19 +163,66 @@ class Fragment {
     ].includes(type);
   }
 
-  // /**
-  //  * Convert fragment data to a specified format
-  //  * @param {string} format the format to convert to (e.g., 'html')
-  //  * @returns {Buffer}
-  //  */
-  // async convertTo(format) {
-  //   const data = await this.getData();
-  //   if (this.type === 'text/markdown' && format === 'html') {
-  //     const html = md.render(data.toString());
-  //     return Buffer.from(html);
-  //   }
-  //   throw new Error(`Unsupported conversion: ${this.type} to ${format}`);
-  // }
+  /**
+   * Convert fragment data to a specified format
+   * @param {string} format the format to convert to (e.g., 'html')
+   * @returns {Promise<Buffer>}
+   */
+  async convertFragment(fragment, ext) {
+    const data = await fragment.getData();
+
+    switch (fragment.mimeType) {
+      case 'text/plain':
+        if (ext === 'txt') {
+          return { data, mimeType: 'text/plain' };
+        }
+        break;
+      case 'text/markdown':
+        if (ext === 'html') {
+          return { data: Buffer.from(markdown.render(data.toString())), mimeType: 'text/html' };
+        } else if (ext === 'txt') {
+          return { data, mimeType: 'text/plain' };
+        }
+        break;
+      case 'text/html':
+        if (ext === 'txt') {
+          return { data: Buffer.from(data.toString()), mimeType: 'text/plain' };
+        } else if (ext === 'html') {
+          return { data, mimeType: 'text/html' };
+        }
+        break;
+      // Add more cases for other fragment types and their conversions
+      // Handle images
+      case 'image/png':
+      case 'image/jpeg':
+      case 'image/webp':
+      case 'image/gif':
+      case 'image/avif':
+        if (['png', 'jpg', 'webp', 'gif', 'avif'].includes(ext)) {
+          return { data, mimeType: `image/${ext}` };
+        }
+        break;
+      // Handle JSON and YAML
+      case 'application/json':
+        if (ext === 'json') {
+          return { data, mimeType: 'application/json' };
+        } else if (ext === 'txt') {
+          return { data: Buffer.from(data.toString()), mimeType: 'text/plain' };
+        }
+        break;
+      case 'application/yaml':
+        if (ext === 'yaml') {
+          return { data, mimeType: 'application/yaml' };
+        } else if (ext === 'txt') {
+          return { data: Buffer.from(data.toString()), mimeType: 'text/plain' };
+        }
+        break;
+      default:
+        return null;
+    }
+
+    return null;
+  }
 }
 
 module.exports.Fragment = Fragment;

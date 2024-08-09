@@ -4,42 +4,37 @@ const { createErrorResponse } = require('../../response');
 const { Fragment } = require('../../model/fragment');
 const logger = require('../../logger');
 const path = require('path');
-// const md = require('markdown-it')();
 
 module.exports = async (req, res) => {
-  // separating the ID and extension from the URL
-  const pathURL = path.parse(req.params.id);
-
-  const ext = pathURL.ext.slice(1) || '';
-  const id = pathURL.name;
+  // Extract the ID and extension from the URL
+  const { ext, name: id } = path.parse(req.params.id);
   const ownerId = req.user;
-  logger.info({ ext, id }, 'Extension and ID passed in the URL');
+
+  logger.info({ ext, id }, 'Received request to get fragment with ID and extension');
+
   try {
-    // Looking for the user id in the current fragment data
-    const frags = await Fragment.byId(ownerId, id);
-    let data = await frags.getData();
+    // Retrieve the fragment by ID and ownerId
+    const fragment = await Fragment.byId(ownerId, id);
+    let data = await fragment.getData();
 
-    // returns an existing fragment's data converted to a supported type.
-    // Initially, you only need to support Markdown fragments (.md) converted to HTML (.html) using markdown-it
-
-    // Check if it has a .md extension
+    // If an extension is provided, attempt to convert the fragment
     if (ext) {
-      if (ext === 'md') {
-        // Changes the content type to html
-        res.set('Content-Type', 'text/html');
-        res.status(200).send(data);
+      // Attempt to convert the fragment based on its type and the extension
+      const convertedData = await Fragment.convertFragment(fragment, ext);
+      if (convertedData) {
+        res.set('Content-Type', convertedData.mimeType);
+        res.status(200).send(convertedData.data);
       } else {
-        // If the extension used represents an unknown or unsupported type,
-        // or if the fragment cannot be converted to this type, an HTTP 415 error is returned
-        res.status(415).json(createErrorResponse(415, 'Unknown or unsupported type'));
+        // Unsupported conversion
+        res.status(415).json(createErrorResponse(415, 'Unsupported conversion type'));
       }
     } else {
-      res.set('Content-Type', frags.type);
+      // No conversion needed, return the original data
+      res.set('Content-Type', fragment.type);
       res.status(200).send(data);
-      return;
     }
   } catch (error) {
-    logger.warn({ errorMessage: error.message }, 'request to non-existent fragment was made');
+    logger.warn({ errorMessage: error.message }, 'Fragment not found');
     res.status(404).json(createErrorResponse(404, 'Fragment not found'));
   }
 };
