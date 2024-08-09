@@ -16,26 +16,24 @@ app.use((req, res, next) => {
 app.get('/v1/fragments/:id', getFragmentById);
 
 // Helper function to create a fragment in the database
-async function createTestFragment(type = 'text/plain; charset=utf-8') {
+async function createTestFragment(
+  type = 'text/plain; charset=utf-8',
+  content = 'This is a test fragment'
+) {
   const fragment = new Fragment({
     ownerId: 'test-owner-id',
     type: type,
-    size: 20,
+    size: Buffer.byteLength(content),
   });
   await fragment.save();
-  await fragment.setData(Buffer.from('This is a test fragment'));
+  await fragment.setData(Buffer.from(content));
   return fragment;
 }
 
 describe('GET /v1/fragments/:id', () => {
   let testFragment;
 
-  // beforeAll(async () => {
-  //   // Create a test fragment before running the tests
-  //   testFragment = await createTestFragment();
-  // });
-
-  it('should return the fragment data for a valid fragment ID', async () => {
+  it('should return raw fragment data for a valid fragment ID without extension', async () => {
     testFragment = await createTestFragment();
     const response = await request(app)
       .get(`/v1/fragments/${testFragment.id}`)
@@ -47,7 +45,7 @@ describe('GET /v1/fragments/:id', () => {
   });
 
   it('should return the .md fragment data converted to html', async () => {
-    testFragment = await createTestFragment('text/markdown');
+    testFragment = await createTestFragment('text/markdown', 'This is a test fragment');
 
     const response = await request(app)
       .get(`/v1/fragments/${testFragment.id}.md`)
@@ -55,11 +53,64 @@ describe('GET /v1/fragments/:id', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('text/html; charset=utf-8');
-    expect(response.text).toBe('This is a test fragment');
+    expect(response.text.trim()).toBe('<p>This is a test fragment</p>');
+  });
+
+  it('should return plain text fragment data for a .txt extension', async () => {
+    testFragment = await createTestFragment('text/plain', 'This is plain text');
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.txt`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe('text/plain; charset=utf-8');
+    expect(response.text).toBe('This is plain text');
+  });
+
+  it('should return 415 for unsupported conversion type for plain text', async () => {
+    testFragment = await createTestFragment('text/plain; charset=utf-8', 'This is plain text');
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.png`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(415);
+    expect(response.body).toEqual(createErrorResponse(415, 'Unknown or unsupported type'));
+  });
+
+  it('should return the fragment as an image when a valid image extension is provided', async () => {
+    const imageBuffer = Buffer.from([
+      /* ...binary data... */
+    ]);
+    testFragment = await createTestFragment('image/png', imageBuffer);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.png`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe('image/png');
+    expect(response.body).toEqual(imageBuffer);
+  });
+
+  it('should return 415 for unsupported conversion type for image', async () => {
+    const imageBuffer = Buffer.from([
+      /* ...binary data... */
+    ]);
+    testFragment = await createTestFragment('image/png', imageBuffer);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.txt`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(415);
+    expect(response.body).toEqual(
+      createErrorResponse(415, 'Unsupported conversion type for image')
+    );
   });
 
   it('should return 404 for a non-existent fragment ID', async () => {
-    testFragment = await createTestFragment();
     const response = await request(app)
       .get('/v1/fragments/non-existent-id')
       .set('Authorization', 'Bearer test-token');

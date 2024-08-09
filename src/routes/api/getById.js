@@ -4,42 +4,109 @@ const { createErrorResponse } = require('../../response');
 const { Fragment } = require('../../model/fragment');
 const logger = require('../../logger');
 const path = require('path');
-// const md = require('markdown-it')();
+const md = require('markdown-it')();
 
 module.exports = async (req, res) => {
-  // separating the ID and extension from the URL
   const pathURL = path.parse(req.params.id);
-
   const ext = pathURL.ext.slice(1) || '';
   const id = pathURL.name;
   const ownerId = req.user;
+
   logger.info({ ext, id }, 'Extension and ID passed in the URL');
+
   try {
-    // Looking for the user id in the current fragment data
     const frags = await Fragment.byId(ownerId, id);
     let data = await frags.getData();
 
-    // returns an existing fragment's data converted to a supported type.
-    // Initially, you only need to support Markdown fragments (.md) converted to HTML (.html) using markdown-it
-
-    // Check if it has a .md extension
     if (ext) {
-      if (ext === 'md') {
-        // Changes the content type to html
-        res.set('Content-Type', 'text/html');
-        res.status(200).send(data);
-      } else {
-        // If the extension used represents an unknown or unsupported type,
-        // or if the fragment cannot be converted to this type, an HTTP 415 error is returned
-        res.status(415).json(createErrorResponse(415, 'Unknown or unsupported type'));
+      // Handle supported conversions based on fragment type
+      switch (frags.type) {
+        case 'text/markdown':
+          if (ext === 'md') {
+            data = md.render(data.toString());
+            res.set('Content-Type', 'text/html');
+            res.status(200).send(data);
+          } else if (ext === 'txt') {
+            res.set('Content-Type', 'text/plain');
+            res.status(200).send(data);
+          } else {
+            res
+              .status(415)
+              .json(createErrorResponse(415, 'Unsupported conversion type for markdown'));
+          }
+          break;
+
+        case 'text/plain':
+          if (ext === 'txt') {
+            res.set('Content-Type', 'text/plain');
+            res.status(200).send(data);
+          } else {
+            res
+              .status(415)
+              .json(createErrorResponse(415, 'Unsupported conversion type for plain text'));
+          }
+          break;
+
+        case 'text/html':
+          if (ext === 'html') {
+            res.set('Content-Type', 'text/html');
+            res.status(200).send(data);
+          } else if (ext === 'txt') {
+            res.set('Content-Type', 'text/plain');
+            res.status(200).send(data);
+          } else {
+            res.status(415).json(createErrorResponse(415, 'Unsupported conversion type for HTML'));
+          }
+          break;
+
+        case 'image/png':
+        case 'image/jpeg':
+        case 'image/webp':
+        case 'image/avif':
+        case 'image/gif':
+          if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif'].includes(ext)) {
+            res.set('Content-Type', `image/${ext}`);
+            res.status(200).send(data);
+          } else {
+            res.status(415).json(createErrorResponse(415, 'Unsupported conversion type for image'));
+          }
+          break;
+
+        case 'application/json':
+          if (ext === 'json') {
+            res.set('Content-Type', 'application/json');
+            res.status(200).send(data);
+          } else if (ext === 'txt') {
+            res.set('Content-Type', 'text/plain');
+            res.status(200).send(data);
+          } else {
+            res.status(415).json(createErrorResponse(415, 'Unsupported conversion type for JSON'));
+          }
+          break;
+
+        case 'application/yaml':
+          if (ext === 'yaml' || ext === 'yml') {
+            res.set('Content-Type', 'application/yaml');
+            res.status(200).send(data);
+          } else if (ext === 'txt') {
+            res.set('Content-Type', 'text/plain');
+            res.status(200).send(data);
+          } else {
+            res.status(415).json(createErrorResponse(415, 'Unsupported conversion type for YAML'));
+          }
+          break;
+
+        default:
+          res.status(415).json(createErrorResponse(415, 'Unknown or unsupported type'));
+          break;
       }
     } else {
+      // No extension provided, return raw data
       res.set('Content-Type', frags.type);
       res.status(200).send(data);
-      return;
     }
   } catch (error) {
-    logger.warn({ errorMessage: error.message }, 'request to non-existent fragment was made');
+    logger.warn({ errorMessage: error.message }, 'Request to non-existent fragment was made');
     res.status(404).json(createErrorResponse(404, 'Fragment not found'));
   }
 };

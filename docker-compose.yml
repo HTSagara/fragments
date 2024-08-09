@@ -31,6 +31,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-test}
       - AWS_DYNAMODB_TABLE_NAME=${AWS_DYNAMODB_TABLE_NAME:-fragments}
+      # - AWS_COGNITO_POOL_ID=${AWS_COGNITO_POOL_ID}
+      # - AWS_COGNITO_CLIENT_ID=${AWS_COGNITO_CLIENT_ID}
     # Ports to publish
     ports:
       - '8080:8080'
