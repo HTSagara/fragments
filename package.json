@@ -49,6 +49,7 @@
     "pino": "^9.0.0",
     "pino-http": "^9.0.0",
     "pino-pretty": "^11.0.0",
+    "sharp": "^0.33.4",
     "stoppable": "^1.1.0"
   }
 }
