@@ -118,4 +118,54 @@ describe('GET /v1/fragments/:id', () => {
     expect(response.status).toBe(404);
     expect(response.body).toEqual(createErrorResponse(404, 'Fragment not found'));
   });
+
+  it('should return JSON fragment data for a .json extension', async () => {
+    const jsonContent = JSON.stringify({ key: 'value' });
+    testFragment = await createTestFragment('application/json', jsonContent);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.json`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe('application/json; charset=utf-8');
+    expect(response.text).toBe(jsonContent);
+  });
+
+  it('should return 415 for unsupported conversion type for JSON', async () => {
+    const jsonContent = JSON.stringify({ key: 'value' });
+    testFragment = await createTestFragment('application/json', jsonContent);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.yaml`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(415);
+    expect(response.body).toEqual(createErrorResponse(415, 'Unsupported conversion type for JSON'));
+  });
+
+  it('should return YAML fragment data for a .yaml extension', async () => {
+    const yamlContent = 'key: value\n';
+    testFragment = await createTestFragment('application/yaml', yamlContent);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.yaml`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toBe('application/yaml');
+    expect(response.text).toBe(yamlContent);
+  });
+
+  it('should return 415 for unsupported conversion type for YAML', async () => {
+    const yamlContent = 'key: value\n';
+    testFragment = await createTestFragment('application/yaml', yamlContent);
+
+    const response = await request(app)
+      .get(`/v1/fragments/${testFragment.id}.json`)
+      .set('Authorization', 'Bearer test-token');
+
+    expect(response.status).toBe(415);
+    expect(response.body).toEqual(createErrorResponse(415, 'Unsupported conversion type for YAML'));
+  });
 });

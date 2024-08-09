@@ -148,15 +148,19 @@ class Fragment {
    * @returns {boolean} true if we support this Content-Type (i.e., type/subtype)
    */
   static isSupportedType(value) {
-    // TODO
     const { type } = contentType.parse(value);
     return [
       'text/plain',
       'text/markdown',
       'text/html',
+      'text/csv',
       'application/json',
+      'application/yaml',
       'image/png',
       'image/jpeg',
+      'image/webp',
+      'image/avif',
+      'image/gif',
     ].includes(type);
   }
 
