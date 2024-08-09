@@ -77,4 +77,38 @@ describe('POST /v1/fragments', () => {
 
     expect(res.status).toBe(201);
   });
+
+  // tests/routes/api/post.test.js
+
+  describe('POST /v1/fragments', () => {
+    // ... existing tests ...
+
+    test('should create a PNG image fragment', async () => {
+      const response = await request(app)
+        .post('/v1/fragments')
+        .set('Content-Type', 'image/png')
+        .auth('user1@email.com', 'password1')
+        .set('Content-Type', 'text/plain')
+        .send(Buffer.from('...')); // Use a real PNG binary data or a mock image
+
+      expect(response.status).toBe(201);
+      expect(response.headers['location']).toMatch(/\/v1\/fragments\/\w+/);
+      expect(response.body.status).toBe('ok');
+      expect(response.body.fragment).toHaveProperty('id');
+    });
+
+    test('should create a JPEG image fragment', async () => {
+      const response = await request(app)
+        .post('/v1/fragments')
+        .set('Content-Type', 'image/jpeg')
+        .auth('user1@email.com', 'password1')
+        .set('Content-Type', 'text/plain')
+        .send(Buffer.from('...')); // Use a real JPEG binary data or a mock image
+
+      expect(response.status).toBe(201);
+      expect(response.headers['location']).toMatch(/\/v1\/fragments\/\w+/);
+      expect(response.body.status).toBe('ok');
+      expect(response.body.fragment).toHaveProperty('id');
+    });
+  });
 });

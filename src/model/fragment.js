@@ -150,7 +150,14 @@ class Fragment {
   static isSupportedType(value) {
     // TODO
     const { type } = contentType.parse(value);
-    return ['text/plain', 'text/markdown', 'text/html', 'application/json'].includes(type);
+    return [
+      'text/plain',
+      'text/markdown',
+      'text/html',
+      'application/json',
+      'image/png',
+      'image/jpeg',
+    ].includes(type);
   }
 
   // /**
